@@ -1,0 +1,83 @@
+创建目录 /common/admin
+1)
+	# mkdir /common
+	# cd /common
+	# mkdir admin
+2) 	# mkdir -p  /common/admin  
+
+命令 [选项]  XXX
+
+-------------------------
+
+tar 解压缩命令详解
+https://www.cnblogs.com/luozeng/p/8674529.html
+
+tar 解压缩
+
+对文件进行打包压缩或者解压缩
+1.tar     # tar -cvf  1 
+
+-c  创建压缩文件		-x  解压压缩文件
+-v  显示压缩或解压的过程
+-f   要处理的文件名
+-j    用bzip2压缩或解压.bz2
+-J   用xz来压缩或解压 .xz
+-z   用gzip压缩或解压文件 .gz
+
+
+打包/etc
+tar  -cvf  1.tar  /etc
+
+1.tar   解压到 /test
+
+# tar -xvf 1.tar -C /test
+
+----------------------------
+
+打包/etc  =>  etc.tar.gz
+
+# tar -czvf etc.tar.gz /etc
+
+解压etc.tar.gz
+# tar -xzvf etc.tar.gz  -C  /test
+
+------------------------------
+
+打包 /etc/sysconfig  => sysconfig.tar.bz2
+
+# tar -cjvf sysconfig.tar.gz2 /etc/sysconfig
+
+解压 sysconfig.tar.bz2  到 /test下  
+
+# tar -xjvf sysconfig.tar.bz2 -C /test
+
+
+-------------------------------
+
+打包 /etc/sysconfig  => sysconfig.tar.xz
+
+# tar -cJvf sysconfig.tar.xz  /etc/sysconfig
+
+# tar -xJvf sysconfig.tar.xz -C /test
+
+-------------------------------
+
+打包 /etc/sysconfig  => sysconfig.zip
+
+# zip  sysconfig.zip /etc/sysconfig  
+
+解压 sysconfig.zip
+
+# unzip sysconfig.zip
+
+zip需要安装zip  unzip需要安装unzip
+
+打包解压bzip2  xz  gzip 需要安装相应软件
+
+zip
+
+
+
+
+
+

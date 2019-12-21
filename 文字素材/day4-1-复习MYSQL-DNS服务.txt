@@ -1,0 +1,76 @@
+回顾内容
+
+HOSTNAME  IP  SELINUX  IPTABLES/FIREWALLD  YUM
+
+MYSQL服务 
+
+
+C/S 模式   Client/Server  客户端/服务端
+**********************************************************
+案例 (VMware同一网段下实验)  两台linux服务器
+1 	dns-server 	192.168.10.101	DNS服务器 /MYSQL客户端	  VMNET11
+2	mysql-server 	192.168.10.102	DNS客户端/MYSQL服务器	VMNET11
+
+zzy.com
+qqzmly.com
+某公司搭建一台主DNS服务器，负责zzy.com名称域的解析工作，服务器已安装Linux系统，该DNS服务器需要对公司内部各服务器的域名进行正向和反向解析。
+
+   DNS服务器	192.168.10.101	dns1.zzy.com
+数据库服务器	192.168.10.102	data.zzy.com
+**********************************************************
+
+www.qqzmly.com  -> 	47.106.115.64	正向解析
+47.106.115.64  -> 	www.qqzmly.com	反向解析
+
+学习服务的步骤
+
+1.确定自己需要部署哪一台服务器？部署什么服务？  DNS域名解析服务
+2.你得知道 服务软件包名称  bind
+3.你得查询一下软件是否安装  ？   rpm -qa | grep bind  
+如果没有安装则安装   yum install bind -y
+4.安装完成后 看一下 都有哪些配置文件   rpm -ql bind
+5. --------
+6.配置完服务 启动服务 一定得记得看自己是否需要加入开机自启
+
+/etc/named.conf			//主配置文件
+/etc/named.rfc1912.zones		//子配置文件
+/var/named/named.localhost		//正向解析配置文件模板
+/var/named/named.loopback		//反向解析配置文件模板
+
+//查看DNS 地址配置情况
+[root@dns-server named]# vi /etc/resolv.conf
+#  vi /etc/sysconfig/network-scripts/ifcfg-ens32 
+
+nslookup linux7.X 默认没有安装 需要自己安装
+
+# yum install bind-utils -y
+
+客户端可以不装DNS服务软件   但是测试或者使用 一定的装 客户端相应的软件 bind-utils
+
+
+
+mysql改密码
+
+1.利用命令 在mysql外部改密码  123456  完成了
+
+2.利用命令  登录进mysql后 在里面改密码  zzyzzy
+
+
+数据库 --  数据表  -- 字段信息  
+
+show databases;
+show tables;
+
+
+
+  -h, --host=name     Connect to host.
+
+
+1.首先配置允许访问的用户，采用授权的方式给用户权限
+
+1
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'IDENTIFIED BY '123456' WITH GRANT OPTION;
+ 说明：root是登陆数据库的用户，123456是登陆数据库的密码，*就是意味着任何来源任何主机反正就是权限很大的样子。
+
+关于mariadb远程连接授权的设置
+https://www.cnblogs.com/zhangdaicong/p/7559942.html

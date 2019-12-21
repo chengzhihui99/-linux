@@ -1,0 +1,371 @@
+回顾内容
+
+HOSTNAME  IP  SELINUX  IPTABLES/FIREWALLD  YUM
+
+MYSQL服务 
+
+------------------
+
+新知识点  DNS服务   Domain Name  Server/System
+
+什么是端口 ？   WEB服务   http://www.qqzmly.com:80  https://www.qqzmly.com:443
+
+Linux——DNS服务   https://www.qqzmly.com/archives/1588
+
+www.qqzmly.com.     qqzmly.com.
+class.qqzmly.com.
+
+
+DNS服务器地址 114.114.114.114   8.8.8.8   
+
+DNS 域名解析服务  --- 把一个域名 解析为 一个  IP地址
+
+DNS服务
+1.服务全称：Domain Name Service(Server | System)
+	服务器类型：主DNS服务器、从DNS服务器、唯缓存DNS服务器
+2.服务功能：为网络中的客户机（linux/windows）提供名称和IP地址关系查询的服务
+		FQDN((Fully Qualified Domain Name))
+	解析方式：FQDN  -- > IP   正向解析  
+		 IP  -->  FQDN	 反向解析
+
+
+		www.qqzmly.com  -> 	47.106.115.64	正向解析
+		47.106.115.64  -> 	www.qqzmly.com	反向解析
+
+		FQDN:完全合格的域名称
+			FQDN = 主机短名 + 所在域名
+		192.168.1.0   1   
+		192.168.2.0   1   
+
+		web  test1.com    web.test1.com   192.168.1.1
+		web  test2.com    web.test2.com	  192.168.2.1
+3.服务模式：C/S客户端服务器模式
+4.服务软件包： bind
+5.服务进程名： named
+6.服务端口号：TCP/UDP-53
+7.服务客户端：
+	linux: dig  host  nslookup  (ping)
+	windows: nslookup (ping)
+8.服务配置文件：
+	/etc/named.conf				主配置文件			定义全局配置
+	/etc/named.rfc1912.zones	子配置文件			定义正向和反向解析区域
+		zone "test.com" {
+			type master;
+			file "test.com.zone";
+		};
+		
+		zone "0.168.192.in-addr.arpa" IN {
+			type master;
+			file "test.com.arpa";
+		};
+	/var/named/xxx.xxx.zone		正向解析数据库文件	建立名称至IP地址的关系
+	/var/named/xxx.xxx.arpa		反向解析数据库文件	建立IP地址至名称的关系
+9.服务管理脚本：
+	/etc/rc.d/init.d/named
+10.DNS服务在服务器端两个重要的测试程序
+	named-checkconf		检测主配置文件和子配置文件中的语法错误
+		用法：named-checkconf 文件名   （无反馈结果表示无错误）
+	named-checkzone		检测正向区域和反向区域解析
+		用法：named-checkzone 正向区域名 正向解析数据库文件（“OK”表示无错误）
+			 named-checkzone 反向区域名 反向解析数据库文件（”OK“表示无错误）
+11.服务器端获取反向域名的方法
+	arpaname IP地址
+	（将反馈结果的第一个部分隐去，即为该网络的反向域名）
+		
+		dig  默认情况下解析的是A记录
+			-t NS	解析NS记录
+			-t MX	解析MX记录
+			-x		解析PTR记录
+		host 默认情况下解析的是A记录和PTR记录
+			-t NS	解析NS记录
+			-t MX	解析MX记录
+		nslookup 默认情况下解析的是A记录和PTR记录
+			在交互模式下可使用set q=  或者set type= 改变解析类型
+
+		资源记录(RR)分类
+			SOA(起始授权)记录：定义名称域
+			NS(名称服务器)记录：定义域中的名称服务器
+			A(主机)记录：定义名称至IP地址之间的关系（正向解析）
+			CNAME(别名)记录：定义A记录的别名（附属名）
+			PTR(反向指针)记录：定义IP地址至名称之间的关系（反向解析）
+			MX(邮件交换器)记录：定义域中的邮件服务器
+
+
+作业：
+
+1 	dns-server 	192.168.10.101	DNS服务器  VMNET11
+2 	windows-client	192.168.10.102	DNSwindows客户器  VMNET11
+3	linux-client 	192.168.10.103	DNSLINUX客户端  VMNET11
+
+zzy.com
+某公司搭建一台主DNS服务器，负责zzy.com名称域的解析工作，服务器已安装Linux系统，该DNS服务器需要对公司内部各服务器的域名进行正向和反向解析。
+
+见名知义
+**********************************************************
+主DNS服务器	192.168.10.101	dns1.zzy.com
+	别名 masterdns.zzy.com
+从DNS服务器	192.168.10.102	dns2.zzy.com
+	别名  slavedns.zzy.com
+WWW服务器 	192.168.10.102	www.zzy.com
+FTP服务器		192.168.10.103	ftp.zzy.com
+数据库服务器	192.168.10.103	data.zzy.com
+邮件服务器	192.168.10.103	mail.zzy.com	
+	MX优先级为10  别名smtp.zzy.com  pop3.zzy.com
+
+
+masterdns.zzy.com  -->  dns1.zzy.com  CNAME
+dns1.zzy.com  > 192.168.10.101
+**********************************************************
+
+
+HOSTNAME   SELINUX 	IPTABLES/FIREWALLD	IP  	 YUM 
+
+4.服务软件包： bind
+5.服务进程名： named   （管理）
+
+学服务步骤
+1.学什么服务？ 该服务是否已经安装？	rpm -qa  | grep  bind 
+2.如果有  就可以进行下一步
+3.如果没有  那么就去安装		yum install bind -y
+4.配置  /  启用服务
+5.考虑一下  服务是否需要开机自启 
+********查询一下软件包  都有哪些配置文件
+
+***********************************
+
+DNS服务配置文件 4个   主配置文件 子配置文件  正向解析文件  反向解析文件
+
+主配置文件  /etc/named.conf
+
+子配置文件	/etc/named.rfc1912.zones
+
+ 正向解析文件（自定义）  /var/named/zzy.com.zone
+
+反向解析文件（自定义）	/var/named/zzy.com.arpa
+
+正向解析文件以及反向解析文件 需要自己去创建！！！！
+
+
+
+
+
+
+
+*************************************
+
+[root@dns-server ~]# cp -a /etc/named.conf  /etc/named.conf.bak
+cp -a  复制一个文件  并把文件的权限也一同复制
+
+注意点：新手在修改配置文件前 非常有必要进行一个备份
+//正向解析配置
+zone "zzy.com" IN {
+        type master;
+        file "zzy.com.zone";
+};
+
+//反向解析配置
+zone "10.168.192.in-addr.arpa" IN {
+        type master;
+        file "zzy.com.arpa";
+};
+
+
+zone "" IN {
+        type master;
+        file "";
+};
+------------------
+服务器端获取反向域名的方法
+
+arpaname IP地址
+    （将反馈结果的第一个部分隐去，即为该网络的反向域名）
+
+[root@dns-server ~]# arpaname 192.168.10.101
+101.10.168.192.IN-ADDR.ARPA
+
+
+ named.localhost    正向解析文件模板
+named.loopback	反向解析文件模板
+
+
+
+A 记录  MX记录   CNAME记录  PTR记录 (反向解析)
+
+
+//linux7.X 默认没有nslookup  这个命令功能  因此可以通过下面方式来查看该命令 在哪一个软件包里
+[root@linux-client ~]# yum provides */nslookup
+
+安装软件
+yum install bind-utils
+
+canonical name   别名记录  CNAME
+
+别名解析就是一个或者多个域名指向另外一个以域名为基础的服务器上。别名解析和A记录不同的地方在于，A记录是IP解析，在解析的记录值中直接输入服务器的IP地址，而别名解析的记录值中则是输入一个二级域名，通过这个域名来解析服务器地址。
+
+
+-------------------
+vi /var/named/zzy.com.zone 
+
+$TTL 1D
+@       IN SOA  zzy.com. root.zzy.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+        NS      dns.zzy.com.
+        MX 10   mail.zzy.com.
+        A       127.0.0.1
+        AAAA    ::1
+dns     A       192.168.10.101
+dns1    A       192.168.10.101
+masterdns       CNAME   dns1.zzy.com.
+dns2    A       192.168.10.102
+slavedns        CNAME   dns2.zzy.com.
+www     A       192.168.10.102
+ftp     A       192.168.10.103
+data    A       192.168.10.103
+mail    A       192.168.10.103
+smtp    CNAME   mail.zzy.com.
+pop3    CNAME   mail.zzy.com.
+
+
+vi /var/named/zzy.com.arpa 
+
+$TTL 1D
+@       IN SOA  zzy.com. root.zzy.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+        NS      dns.zzy.com.
+        A       127.0.0.1
+        AAAA    ::1
+        PTR     localhost.
+dns     A       192.168.10.101
+101     PTR     dns1.zzy.com.
+101     PTR     masterdns.zzy.com.
+102     PTR     dns2.zzy.com.
+102     PTR     slavedns.zzy.com.
+102     PTR     www.zzy.com.
+103     PTR     ftp.zzy.com.
+103     PTR     data.zzy.com.
+103     PTR     mail.zzy.com.
+103     PTR     smtp.zzy.com.
+103     PTR     pop3.zzy.com.
+
+-------------------------------------
+
+[root@linux-client ~]# nslookup 192.168.10.101
+101.10.168.192.in-addr.arpa	name = dns1.zzy.com.
+101.10.168.192.in-addr.arpa	name = masterdns.zzy.com.
+
+[root@linux-client ~]# nslookup 192.168.10.102
+102.10.168.192.in-addr.arpa	name = dns2.zzy.com.
+102.10.168.192.in-addr.arpa	name = www.zzy.com.
+102.10.168.192.in-addr.arpa	name = slavedns.zzy.com.
+
+[root@linux-client ~]# nslookup 192.168.10.103
+103.10.168.192.in-addr.arpa	name = ftp.zzy.com.
+103.10.168.192.in-addr.arpa	name = data.zzy.com.
+103.10.168.192.in-addr.arpa	name = mail.zzy.com.
+103.10.168.192.in-addr.arpa	name = pop3.zzy.com.
+103.10.168.192.in-addr.arpa	name = smtp.zzy.com.
+
+-------------------------------------------
+
+
+[root@linux-client ~]# nslookup dns2.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+Name:	dns2.zzy.com
+Address: 192.168.10.102
+
+[root@linux-client ~]# nslookup www.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+Name:	www.zzy.com
+Address: 192.168.10.102
+
+[root@linux-client ~]# nslookup ftp.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+Name:	ftp.zzy.com
+Address: 192.168.10.103
+
+[root@linux-client ~]# nslookup mail.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+Name:	mail.zzy.com
+Address: 192.168.10.103
+
+[root@linux-client ~]# nslookup masterdns.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+masterdns.zzy.com	canonical name = dns1.zzy.com.
+Name:	dns1.zzy.com
+Address: 192.168.10.101
+
+[root@linux-client ~]# 
+[root@linux-client ~]# nslookup masterdns.zzy.com
+Server:		192.168.10.101
+Address:	192.168.10.101#53
+
+masterdns.zzy.com	canonical name = dns1.zzy.com.
+Name:	dns1.zzy.com
+Address: 192.168.10.101
+
+--------------------------------------------
+
+
+1）配置文件检测
+
+# named-checkconf /etc/named.conf                //无结果反馈表示配置文件无语法错误
+# named-checkconf /etc/named.rfc1912.zones        //无结果反馈表示配置文件无语法错误
+配置文件检测
+
+2）正向和反向区域解析测试
+
+# named-checkzone zzy.com /var/named/zzy.com.zone
+            //反馈结果包含OK即通过测试
+# named-checkzone 10.168.192.in-addr.arpa /var/named/zzy.com.arpa
+            //反馈结果包含OK即通过测试
+
+
+---------------------------------------------
+
+[root@dns-server named]# yum install net-tools -y
+
+下面的步骤 是方便后续拍错
+[root@dns-server named]# netstat -tunlp | grep named
+tcp        0      0 127.0.0.1:953           0.0.0.0:*               LISTEN      1438/named          
+tcp        0      0 192.168.10.101:53       0.0.0.0:*               LISTEN      1438/named          
+tcp        0      0 127.0.0.1:53            0.0.0.0:*               LISTEN      1438/named          
+tcp6       0      0 ::1:953                 :::*                    LISTEN      1438/named          
+tcp6       0      0 :::53                   :::*                    LISTEN      1438/named          
+udp        0      0 192.168.10.101:53       0.0.0.0:*                           1438/named          
+udp        0      0 127.0.0.1:53            0.0.0.0:*                           1438/named          
+udp6       0      0 :::53                   :::*                                1438/named
+
+
+ps -ef | grep named
+named      1438      1  0 02:18 ?        00:00:00 /usr/sbin/named -u named -c /etc/named.conf
+root       1475   1226  0 02:29 pts/0    00:00:00 grep --color=auto named
+
+[root@dns-server named]# netstat -tunlp | grep 53
+tcp        0      0 127.0.0.1:953           0.0.0.0:*               LISTEN      1438/named          
+tcp        0      0 192.168.10.101:53       0.0.0.0:*               LISTEN      1438/named          
+tcp        0      0 127.0.0.1:53            0.0.0.0:*               LISTEN      1438/named          
+tcp6       0      0 ::1:953                 :::*                    LISTEN      1438/named          
+tcp6       0      0 :::53                   :::*                    LISTEN      1438/named          
+udp        0      0 192.168.10.101:53       0.0.0.0:*                           1438/named          
+udp        0      0 127.0.0.1:53            0.0.0.0:*                           1438/named          
+udp6       0      0 :::53                   :::*                                1438/named
+
+

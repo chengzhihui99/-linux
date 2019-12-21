@@ -1,0 +1,298 @@
+回顾内容
+
+pwd  cd  ls  cat  head tail
+
+mkdir  rmdir   cp  mv  rm   touch  echo       history  Ctrl+L  Ctrl+c
+
+cp  在什么地方   复制什么内容  复制内容到哪里？
+
+mv  移动  移动什么文件  移动的文件移动到哪里？
+
+服务 ：   服务状态 启动  关闭  重启  开机自启  自己不自启 
+
+HOSTNAME  SELINUX  IP  YUM  IPTABLES/FIREWALLD
+
+查看主机名   临时修改主机名 永久修改主机名
+
+查看SELINUX状态  临时修改SELINUX  永久修改SELINUX  (关闭)
+
+# 列出正在运行的 Unit
+$ systemctl list-units
+
+ | 管道符 
+
+ grep  过滤
+
+-------------------------------
+
+修改主机名地址
+
+修改主机网卡IP地址/网卡信息
+
+永久禁用SELINUX
+
+------------------------------
+
+练习题：
+
+在根下创建一个名为ziyi的目录
+
+接上一步 进入ziyi这个目录 并在下面创建一个名为1.txt的空文件
+
+接上一步 在1.txt文件中写入 hello world
+
+在根下创建一个ziyi.txt文件  文件内容为 “My name is ziyi”
+
+
+修改主机名为  server1
+
+IP地址为 192.168.10.101
+
+DNS地址为 192.168.10.1
+
+网关地址为 192.168.10.1
+
+
+
+HOSTNAME  SELINUX  IP  YUM  IPTABLES/FIREWALLD
+
+
+-----------------------------
+
+今天内容
+
+磁盘管理
+
+分区  最多只能分4个主分区
+
+逻辑分区是用来解决主分区不够用的问题
+
+
+linux
+
+df -hT查看磁盘大小
+
+ll = ls -l
+
+ll /dev/sd*
+
+关机 poweroff    重启reboot
+
+1.给虚拟机增加一块20G的虚拟硬盘；
+2.将新增的20G硬盘分成6个分区
+	1）主  5G	sdc1  pri
+	2）主  5G	sdc2  pri
+	3）主  2G	sdc3  pri
+				sdc4  ext
+	5）逻  3G	sdc5  log
+	6）逻  3G	sdc6  log  
+
+
+3.将第3个分区转换为linux swap分区
+4.保存分区信息并退出，查看并显示这个20G硬盘的分区情况
+
+5.格式化第一个分区：文件系统ext4，卷标MYDATA，并使用新分区的UUID挂载至/mydata目录
+6.格式化第二个分区：文件系统ext4，卷标MYDATA2，并使用新分区的卷标挂载到/mydata2目录
+
+7.格式化第三个分区：为当前系统增加2G虚拟内存
+
+8.格式化第五个分区：文件系统ext3，块大小2048，并使用设备文件名以只读方式挂载到/mydata5
+9.格式化第六个分区：文件系统ext3，块大小2048，并使用新分区的UUID实现开机自动挂载/mydata6
+
+df -hT  查看挂载信息
+挂载分两种  临时挂载 永久挂载
+挂载  挂载哪一个地方  挂载到哪里
+mount UUID="f9f3c234-6ce2-4da3-82ee-3aa65f626664" /mydata
+mount LABEL="MYDATA" /mydata
+mount /dev/sdb1 /mydata
+永久挂载
+/dev/sdb1               /mydata                 ext4    defaults        0 0
+UUID="f9f3c234-6ce2-4da3-82ee-3aa65f626664"    /mydata                 ext4    defaults        0 0
+LABEL="MYDATA" /mydata                 ext4    defaults        0 0
+
+# mount -a
+加载全部 不需要重启
+
+df 与 df -hT  区别
+
+-T  type 类型
+-h  Hommization  人性化
+
+
+取消挂载  umount /dev/sdb1
+	umount /mydata
+
+
+
+ll /dev/sd*
+fdisk -l
+单独查看一块磁盘  /dev/sdb
+
+管理硬盘  fdisk  /dev/sdb
+
+mkfs -t ext4 -L "MYDATA2" /dev/sdb2
+
+mkfs 命令 选项
+
+-L  标签
+
+-t  类型
+
+-b  块大小
+
+blkid /dev/sdb3（UUID/文件系统类型/卷标）
+
+mkfs -t ext4 -L "MYDATA" /dev/sdb1
+
+--------------------------
+
+命令(输入 m 获取帮助)：m
+命令操作
+   d   delete a partition		删除
+   L   list known partition types		列出类型
+   n   add a new partition		创建
+   p   print the partition table		列出所有分区表
+   q   quit without saving changes	退出
+   t   change a partition's system id	改变分区系统号
+   w   write table to disk and exit	保存并退出
+
+------------
+
+
+p primary (0 primary, 0 extended, 4 free)
+
+p主（0主，0扩展，4空闲）
+
+e extended
+
+扩展的
+
+free -m 查看当前swap相关信息
+
+Swap分区在系统的物理内存(这里应该是运行内存)不够用的时候，把物理内存中的一部分空间释放出来，以供当前运行的程序使用。那些被释放的空间可能来自一些很长时间没有什么操作的程序，这些被释放的空间被临时保存到Swap分区中，等到那些程序要运行时，再从Swap分区中恢复保存的数据到内存中。
+
+
+已将分区“Linux”的类型更改为“Linux swap / Solaris”
+
+mkfs -t  ext4 /dev/sdb1
+mkfs.ext4 /dev/sdb2
+
+swap 增加方法
+1.得找到一块盘 分区  并改变系统类型为swap
+2.格式化为swap	mkswap  /dev/sdb3
+3.查看一下系统当前swap相关信息 free -m
+4.挂载 临时挂载 永久挂载 
+临时挂载 swapon /dev/sdb3  
+取消挂载 swapoff /dev/sdb3
+
+[root@server1 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:            972         111         763           7          97         738
+Swap:          2047           0        2047
+[root@server1 ~]# swapon /dev/sdb3
+[root@server1 ~]# free -m
+              total        used        free      shared  buff/cache   available
+Mem:            972         112         761           7          97         737
+Swap:          4095           0        4095
+永久挂载 vi /etc/fstab
+
+
+根文件系统之外的其他文件要想能够被访问，都必须通过“关联”至根文件系统上的某个目录来实现，此关联操作即为“挂载”，此目录即为“挂载点”,解除此关联关系的过程称之为“卸载”
+
+--------------------------
+
+※※※※※※※※※※※※※※※※※※※※※※※※※※※
+
+
+/dev/sdb4        25167872    41943039     8387584    5  Extended
+extended分区无法挂载！！！
+
+fdisk里面  p查询分区表
+fdisk外面  fdisk -l /dev/sdb
+
+/dev/sdb(5-X)   从5开始 全部都是逻辑分区
+
+※※※※※※※※※※※※※※※※※※※※※※※※※※※
+
+
+--------------------------
+
+YUM源配置 (一个强大的仓库  仓库里面很多软件  /  应用商城)
+
+Yum（全称为 Yellow dog Updater, Modified）是一个在Fedora和RedHat以及CentOS中的Shell前端软件包管理器。基于RPM包管理，能够从指定的服务器自动下载RPM包并且安装，可以自动处理依赖性关系，并且一次安装所有依赖的软件包，无须繁琐地一次次下载、安装。
+
+1.怎么确认光驱是否存在？		ll /dev/sr0
+2.怎么确认光驱中有光盘？		fdisk -l /dev/sr0
+3.怎么开机自动挂载光盘？
+4.光盘文件类型为iso9660，只能读不能写
+
+/dev/sr0是光驱的设备名，/dev/cdrom代表光驱
+
+cdrom是sr0的软链接.你ll /dev/cdrom和ll /dev/sr0看看显示
+
+挂载几步走
+1.创建挂载点  
+2.挂什么东西  挂载到哪里  挂载类型
+
+永久挂载
+挂什么东西  挂载到哪里  挂载类型 defaults 0 0
+
+/dev/sr0                /cdrom                  iso9660 defaults,ro     0 0
+
+/opt/CentOS-7-x86_64-DVD-1908.iso /cdrom        iso9660 defaults,ro,loop     0 0
+
+见名知义
+
+本地YUM源 他是依托于镜像文件的
+所以在配置本地YUM源的时候 必须得先将镜像文件挂载好
+
+cd /etc/yum.repos.d/	该目录为YUM源配置文件目录
+YUM源文件  均为repo后缀文件
+
+enable=1 表示启用这个源。
+gpkcheck=0 表示对从这个源下载的rpm包不进行校验；
+
+
+vi /etc/yum.repos.d/cdrom.repo
+[CDROM]
+name=CDROM
+baseurl=file:///cdrom
+enable=1
+gpgcheck=0
+
+yum clean all  	清空YUM源  清空
+yum makecache	加载YUM源   生成缓存
+yum repolist	列出YUM源  repo list  repo的列表
+
+----------------------------
+
+[root@localhost /]# yum clean all
+已加载插件：fastestmirror
+正在清理软件源： CDROM
+[root@localhost /]# yum makecache
+已加载插件：fastestmirror
+Determining fastest mirrors
+CDROM                                                             | 3.6 kB  00:00:00     
+(1/4): CDROM/group_gz                                             | 165 kB  00:00:00     
+(2/4): CDROM/primary_db                                           | 3.2 MB  00:00:00     
+(3/4): CDROM/filelists_db                                         | 3.3 MB  00:00:00     
+(4/4): CDROM/other_db                                             | 1.3 MB  00:00:00     
+元数据缓存已建立
+[root@localhost /]# yum repolist
+已加载插件：fastestmirror
+Loading mirror speeds from cached hostfile
+源标识                                    源名称                                    状态
+CDROM                                     CDROM                                     4,067
+repolist: 4,067
+
+-------------------------------
+
+依赖关系   装一个软件  需要很多软件支持 否则无法打开这个软件
+YUM源的好处 就是帮你解决了这些依赖关系 
+本地YUM源的缺点  软件大多版本都很低
+
+rpm -qa  | grep vim  	查看软件是否安装
+
+---------------------------
+
+HOSTNAME  IP  IPTABLES/FIREWALLD  SELINUX  YUM

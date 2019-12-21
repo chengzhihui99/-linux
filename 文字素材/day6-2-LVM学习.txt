@@ -1,0 +1,29 @@
+sdb1  第一個主分區三三swap
+
+分區（
+
+sdb2  第二個主分區
+sdb5  
+sdb6
+）
+
+
+volume  group
+
+lvm
+
+物理卷  卷組  邏輯卷    
+
+fdisk -l
+fdisk /dev/sdb
+sdb1  
+sdb2 sdb5 sdb6
+fdisk /dev/sdb
+mkswap /dev/sdb1
+vim /etc/fstab
+/dev/sdb1	swap	swap	defaults	0 0
+
+
+
+sdb2 sdb5 sdb6
+pvcreate 

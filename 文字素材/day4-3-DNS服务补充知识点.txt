@@ -1,0 +1,33 @@
+DNS服务
+
+主配置文件		/etc/named.conf
+子配置文件		/etc/named.rfc1912.zones
+正向解析配置文件模板	/var/named/named.localhost
+反向解析配置文件模板	/var/named/named.loopack
+
+需要的软件包  bind			//yum install bind 
+
+服务进程名叫  named		//systemctl start/stop  named
+
+nslookup该命令 需要手动去安装bind-utils 这个软件
+				//yum install bind-utils -y
+
+
+正向解析   www.baidu.com  ->>>  192.168.10.111
+反向解析	192.168.10.111    ->>>  www.baidu.com
+
+
+1）配置文件检测
+
+# named-checkconf     /etc/named.conf                //无结果反馈表示配置文件无语法错误
+# named-checkconf     /etc/named.rfc1912.zones        //无结果反馈表示配置文件无语法错误
+配置文件检测
+
+2）正向和反向区域解析测试
+
+# named-checkzone zzy.com /var/named/zzy.com.zone
+            //反馈结果包含OK即通过测试
+# named-checkzone 10.168.192.in-addr.arpa /var/named/zzy.com.arpa
+            //反馈结果包含OK即通过测试
+
+

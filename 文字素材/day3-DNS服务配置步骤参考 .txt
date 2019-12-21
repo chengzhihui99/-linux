@@ -1,0 +1,127 @@
+DNS配置步骤
+1.检查和安装服务软件包
+	# rpm -qa | grep bind
+	# yum install bind -y
+
+2.编辑配置文件
+(1)编辑主配置文件
+	# vim /etc/named.conf
+		需要编辑的行包括
+		listen-on port 53 { any; };
+	//	listen-on-v6 port 53 { ::1; };	
+		allow-query     { any; };
+		recursion yes;
+		dnssec-enable no;
+		dnssec-validation no;
+	//	bindkeys-file "/etc/named.iscdlv.key";
+	//	managed-keys-directory "/var/named/dynamic";
+
+(2)编辑子配置文件
+	# vim /etc/named.rfc1912.zones
+		在文档的最后增加以下内容
+		zone "zzy.com" IN {
+			type master;
+			file "zzy.com.zone";
+		};
+
+		zone "0.168.192.in-addr.arpa" IN {
+			type master;
+			file "zzy.com.arpa";
+		};
+
+(3)复制生成正向和反向区域解析数据库文件
+	# cp -p /var/named/named.localhost /var/named/zzy.com.zone
+	# cp -p /var/named/named.loopback /var/named/zzy.com.arpa
+
+(4)编辑正向区域解析数据库文件
+	# vim /var/named/zzy.com.zone
+		参考以下格式编辑
+		$TTL 1D
+		@	IN SOA	zzy.com. root.zzy.com. (
+							0	; serial
+							1D	; refresh
+							1H	; retry
+							1W	; expire
+							3H )	; minimum
+					NS		dns1.zzy.com.
+					NS		dns2.zzy.com.
+					MX 10	mail.zzy.com.
+					A		127.0.0.1
+		dns1		A		192.168.0.3
+		dhcp		A		192.168.0.1
+		dhcprelay	A		192.168.0.2
+		masterdns	CNAME	dns1.zzy.com.
+		dns2		A		192.168.0.4
+		slavedns	CNAME	dns2.zzy.com.
+		nfs			A		192.168.0.5
+		samba		A		192.168.0.6
+		ftp			A		192.168.0.7
+		web1		A		192.168.0.8
+		www			CNAME	web1.zzy.com.
+		data		A		192.168.0.9
+		mail		A		192.168.0.10
+		smtp		CNAME	mail.zzy.com.
+		pop3		CNAME	mail.zzy.com.
+
+(5)编辑反向区域解析数据库文件
+	# vim /var/named/zzy.com.arpa
+		参考以下格式编辑
+		$TTL 1D
+		@	IN SOA	zzy.com. root.zzy.com. (
+							0	; serial
+							1D	; refresh
+							1H	; retry
+							1W	; expire
+							3H )	; minimum
+				NS	dns1.zzy.com.
+				NS	dns2.zzy.com.
+				A	127.0.0.1
+				PTR	localhost.
+		dns1	A	192.168.0.3
+		dns2	A	192.168.0.4
+		1		PTR	dhcp.zzy.com.
+		2		PTR	dhcprelay.zzy.com.
+		3		PTR	dns1.zzy.com.
+		3		PTR	master.zzy.com.
+		4		PTR	dns2.zzy.com.
+		4		PTR	slave.zzy.com.
+		5		PTR	nfs.zzy.com.
+		6		PTR	samba.zzy.com.
+		7		PTR	ftp.zzy.com.
+		8		PTR	web1.zzy.com.
+		8		PTR	www.zzy.com.
+		9		PTR	data.zzy.com.
+		10		PTR	mail.zzy.com.
+		10		PTR	smtp.zzy.com.
+		10		PTR	pop3.zzy.com.
+
+3.配置文件检测
+	# named-checkconf /etc/named.conf
+		无结果反馈表示配置文件无语法错误
+	# named-checkconf /etc/named.rfc1912.zones
+		无结果反馈表示配置文件无语法错误
+
+4.正向和反向区域解析测试
+	# named-checkzone zzy.com /var/named/zzy.com.zone
+		反馈结果包含OK即通过测试
+	# named-checkzone 0.168.192.in-addr.arpa /var/named/zzy.com.arpa
+		反馈结果包含OK即通过测试
+
+5.启动服务并将服务设置为开机自启动
+	# service named start
+	# service named status
+		反馈结果包含正在运行即成功
+	# chkconfig named on
+	# chkconfig named --list
+		反馈结果在2-5的运行级别中均为启用即成功
+
+6.客户端指定DNS服务器地址
+	修改客户端网卡配置文件
+		# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+	增加
+		DNS1=192.168.0.3
+	重启网络服务
+		# service network restart
+
+7.客户端各种测试
+
